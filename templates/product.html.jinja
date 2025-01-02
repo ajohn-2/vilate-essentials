@@ -9,11 +9,21 @@
   <body>
     {% include "components/navbar.html.jinja"%}
     <h1>Product Page</h1>
-    {{product["name"]}}
-    {{product["description"]}}
-    {{product["dimension"]}}
-    {{product["price"]}}
-    <img src="{{product['image']}}">
+       <div class = "container">
+      <div class = "row">
+        <div class = "col-5">
+          <img src="{{product['image']}}" class="rounded mt-auto p-5" alt="{{product['product']}}" height = "450px">
+        </div>
+        <div class = "col-4">
+        <h1 class = "text-success"> {{product["product"]}}</h1>
+        <br>
+        <p class = "text-success">{{product["description"]}}</p>
+        </div>
+        <div class = "col-3">
+        <p class = "text-success ">${{product["price"]}}</p>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   </body>
 </html>
