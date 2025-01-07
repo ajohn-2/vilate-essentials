@@ -47,8 +47,6 @@ def load_user(user_id):
 
     
 
-
-
 def connect_db():
     conn = pymysql.connect(
         host="10.100.34.80",
@@ -108,8 +106,11 @@ def add_to_cart(product_id):
 
     cursor.execute(f"""INSERT INTO 
                     `Cart` (`customer_id`, `product_id`, `quantity`) 
-                   VALUES ('{customer_id}','{product_id}','{quantity}')""")
-    
+                   VALUES ('{customer_id}','{product_id}','{quantity}')
+                   ON DUPLICATE KEY UPDATE 
+                        'quantity' = 'quantity' + {quantity}
+                   """)
+                 
     cursor.close()
     conn.close()
     return redirect('/cart')
@@ -180,9 +181,9 @@ def logout():
     flask_login.logout_user()
     return redirect('/')
 
-@app.route('/cart')
+@app.route("/cart")
 @flask_login.login_required
-def cart():
+def add_cart():
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -194,7 +195,36 @@ def cart():
 
     results = cursor.fetchall()
 
-    cursor.close()
+    total = 0 
+    for products in results:
+
+        quantity = products["quantity"]
+        price = products["price"]
+        item_total = quantity * price
+        total = item_total + total
+
+    cursor.close()      
     conn.close()
 
     return render_template("cart.html.jinja", products=results)
+
+@app.route("/cart/<cart_id>/del", methods = ["POST"])
+@flask_login.login_required
+def delete(cart_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(f"DELETE FROM 'Cart' WHERE 'id' ={cart_id};")
+    cursor.close()
+    conn.close()
+    return redirect("/cart")
+
+@app.route("/cart/<cart_id>/update", methods = ["POST"])
+@flask_login.login_required
+def update(cart_id):
+    quantity = request.form["UPDATE"]
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE 'Cart' SET 'quantity' = {'quantity'} WHERE 'id'={cart_id};")
+    cursor.close()
+    conn.close()
+    return redirect("/cart")

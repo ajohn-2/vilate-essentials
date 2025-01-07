@@ -20,7 +20,7 @@
         <p class = "text-success">{{product["description"]}}</p>
         </div>
         <div class = "col-3">
-        <p class = "text-success ">${{product["price"]}}</p>
+        <p class = "text-success ">${{ "%.2f" | format( product["price"] )}}</p>
         </div>
       </div>
     </div>
