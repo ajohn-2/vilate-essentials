@@ -8,7 +8,11 @@
   </head>
   <body>
   {% include "components/navbar.html.jinja"%}
-  <h1 text-center> Vilateé's Signature Products</h1>
+  <br>
+  <br>
+  <h1 class="text-center"> Vilateé's Signature Products</h1>
+  <br>
+  <br>
   <form class="container" action="/browse">
         <div class="input-group mb-3">
         <input
@@ -20,15 +24,17 @@
             >
             <button class="btn btn-outline-primary" type="submit">Search</button>
         </div>
+        <br>
+        <br>
     </form>
   {% for item in products %}
     <div class="card" style="width: 18rem;">
         <img src="{{item['image']}}" class="card-img-top" alt="...">
             <h4 class="card-title">{{item["name"]}}</h4>
-            <br>
             <p class="card-text">{{item["description"]}}</p>
             <a href="#" class="btn btn-primary">${{ "%2.f" | format( item["price"] )}}</a>
-             <button type="button" class="fs-6 btn btn-primary w-10"> Add to Cart</button>
+            <br>
+             <button type="button" class="fs-8 btn btn-primary w-10"> Add to Cart</button>
         </div>
       </div>
     </div>
