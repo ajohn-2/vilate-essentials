@@ -1,3 +1,4 @@
+from itertools import product
 from flask import Flask, render_template, request, flash, redirect
 import flask_login
 
@@ -255,3 +256,35 @@ def add_checkout():
     conn.close()
 
     return render_template("checkout.html.jinja", products=results)
+
+
+
+@app.route("/reviews", methods = ["POST"])
+@flask_login.login_required
+def add_reviews():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    customer_id = flask_login.current_user.id
+
+    cursor.execute(f"""SELECT `ratings`, `comments`, `product_id`, `customer_id`, `image`, `time_stamp`
+    FROM 'Reviews' JOIN 'Customer' ON `customer_id` = `Customer`.`id`                  
+    WHERE `customer_id` = {customer_id};""")
+
+    results = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("product.html.jinja", products=results)
+
+
+
+
+
+
+
+
+
+
+

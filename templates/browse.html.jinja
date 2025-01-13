@@ -32,9 +32,9 @@
         <img src="{{item['image']}}" class="card-img-top" alt="...">
             <h4 class="card-title">{{item["name"]}}</h4>
             <p class="card-text">{{item["description"]}}</p>
-            <a href="#" class="btn btn-primary">${{ "%2.f" | format( item["price"] )}}</a>
-            <br>
-             <button type="button" class="fs-8 btn btn-primary w-10"> Add to Cart</button>
+            <a href="#" class="btn btn-primary">${{ "%.2f" | format( item["price"] )}}</a> 
+             <button type="button" class="fs-8 btn btn-dark w-7">Add to Cart</button>
+             <br>
         </div>
       </div>
     </div>
