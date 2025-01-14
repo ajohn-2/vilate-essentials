@@ -15,49 +15,57 @@
       <div class = "row">
         <div class = "col-5">
           <img src="{{product['image']}}" class="rounded mt-auto p-5" alt="{{product['product']}}" height = "450px">
+          <br>
+          <br>
         </div>
         <div class = "col-4">
         <h1 class = "text-success"> {{product["product"]}}</h1>
+        <h4 class = "text-success">Avg. Rating: {{average}}</h4>
         <br>
         <p class = "text-success">{{product["description"]}}</p>
+        <br>
         </div>
         <div class = "col-3">
-        <p class = "text-success ">${{ "%.2f" | format( product["price"] )}}</p>
+        <p class = "text-success">${{ "%.2f" | format( product["price"] )}}</p>
+        <br>
+        <br>
         </div>
       </div>
-          <button type="button" class="fs-8 btn btn-dark w-7">Add to Cart</button>
+          <button type="button" class="fs-8 btn btn-dark w-7 text-center">Add to Cart</button>
     </div>
 
       <br>
       <br>
 
-    <h4>Review This Product</h4>
-      <div class="form-floating">
-        <textarea maxlength="150" class="form-control" placeholder="Review" id="floatingTextarea2" style="height: 100px"></textarea>
-        <label for="floatingTextarea2">Review</label>
-      </div>
-      <br>
-      <h4>Rate This Product</h4>
-      <div class="col-sm-5 col-md-8">
-        <input type="int" id="Ratings" class="form-control" placeholder="Rating" aria-label="Review" min="1" max="5">
-      </div>
-      <br>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-white">Submit Review</button>
-      </div>
-    
-    <div class="container-fluid text-center">
-      ...
-    </div>
-      <div class="card" style="width: 18rem;">
-        <div class="card-body">
-        <h5 class="card-title">Card title</h5>
-        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-      </div>
-    </div>
+    {%for review in reviews %}
+      <div class = "container">
+        <div class = "row">
+
+      <form method="post" action = "/product/{{product['id']}}/reivew"></form>
+        <h4>Review This Product</h4>
+          <div class="form-floating">
+            <textarea name="reviewproduct" maxlength="80" class="form-control" placeholder="Review" id="floatingTextarea2" style="height: 50px" style="width:30px"></textarea>
+          </div>
+        <br>
+        <h4>Rate This Product</h4>
+          <div class="form-floating">
+            <input type="int" id="Ratings" class="form-control" aria-label="Review" min="1" max="5" style="height:50px" style="width: 30px">
+          </div>
+        <br>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-dark">Submit Review</button>
+          </div>
+        
+          <div class="card" style="width: 18rem;">
+            <div class="card-body">
+            <h5 class="card-title">{{Reviews["username"]}}</h5>
+            <p class="card-text">{{review["comments"]}}</p>
+            <p>{{review["timestamp"].strftime("%Y-%d-%m")}}</p>
+          </div>
+        </div>
 
 
-
+    {% endfor %}
 
 
 

@@ -94,7 +94,23 @@ def productpage(product_id):
 
     cursor.close()
     conn.close()
-    return render_template("product.html.jinja", product = result)
+
+    total = 0
+    try:
+        for ratings in result:
+            sum = ratings["ratings"]
+
+            total = total + sum
+
+            count = len(result)
+
+        average = total / count
+    except:
+        average = 0
+
+    return render_template("product.html.jinja", product = result, average = average)
+
+
 
 @app.route("/product/<product_id>/cart", methods = ["POST"])
 @flask_login.login_required
@@ -277,6 +293,34 @@ def add_reviews():
     conn.close()
 
     return render_template("product.html.jinja", products=results)
+
+@app.route("/product/<product_id>/reviews", methods = ["POST"])
+@flask_login.login_required
+def update_reviews(product_id):
+    comments = request.form("comments")
+    ratings = request.form("ratings")
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    customer_id = flask_login.current_user.id
+
+
+    cursor.execute(f"""INSERT INTO 
+                    `Reviews`(`customer_id`, `product_id`, `comments`, `ratings`) 
+                   VALUES ('{customer_id}','{product_id}','{comments}', `{ratings}`)
+                   ON DUPLICATE KEY UPDATE 
+                        'comments' = 'comments' + {ratings}
+                   """)
+                    
+    
+    results = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("product.html.jinja", product=results)                 
+
 
 
 
