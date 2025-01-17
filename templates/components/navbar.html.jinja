@@ -22,21 +22,16 @@
           <a class="nav-link" href="/checkout">Checkout</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">My Account</a>
+          <a class="nav-link" href="/">Orders</a>
         </li>
       </ul>
+       <form class="d-flex ms-auto" role="search" action = "/browse">
+        <input class="form-control me-2" type="search" name = "query" placeholder="Search products" aria-label="Search">
+        <button class="btn btn-success" type="submit">Search</button>
+      </form>
       {% if current_user.is_authenticated %}
-      <button class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-             {{current_user.username }}
-          </button>
-         <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Account</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="/browse">View Products</a></li>
-              <li><a class="dropdown-item" href="/cart">Cart</a></li>
-              <li><a class="dropdown-item" href="">Log Out</a></li>
-            </ul>
-          </div>
+            Hi {{current_user.username }}
+            <a href = "/sign_out" class = "btn btn-outline-light">Log Out</a>
       {% else %}
         <a href="/signup" class="btn btn-outline-secondary">Sign Up</a>
       {% endif %}

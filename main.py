@@ -134,60 +134,67 @@ def add_to_cart(product_id):
     
 @app.route("/signup", methods=["POST", "GET"])
 def signuppage():
-     if request.method == "POST":
-        name = request.form["name"]
-        username = request.form["username"]
-        password = request.form["pass"]
-        confirmpassword = request.form["confirmpass"]
-        email = request.form["email"]
-        address = request.form["address"]
-        conn = connect_db()
-        cursor = conn.cursor()
-        if len(password) < 8:
-            flash("Password contains less than 8 characters")
-        if confirmpassword != password:
-            flash("The passwords don't match")
-        else:
-            try:
-                cursor.execute(f"""
-                INSERT INTO `Customer` 
-                    (`first_name`, `last_name`, `username`, `password`, `email`, `address`)
-                VALUE
-                    ('{name}', '{username}', '{password}', '{email}', '{address}');
-                """)
-            except pymysql.err.IntegrityError:
-                flash("Username/Email is already in use")
-            else:    
-                return redirect("/signin") 
-            finally:
-                cursor.close()
-                conn.close()
-     return render_template("signup.html.jinja")
+    if flask_login.current_user.is_authenticated:
+        return redirect("/")
+    else:
+        if request.method == "POST":
+
+            name = request.form["name"]
+            username = request.form["username"]
+            password = request.form["pass"]
+            confirmpassword = request.form["confirmpass"]
+            email = request.form["email"]
+            address = request.form["address"]
+            conn = connect_db()
+            cursor = conn.cursor()
+            if len(password) < 8:
+                flash("Password contains less than 8 characters")
+            if confirmpassword != password:
+                flash("The passwords don't match")
+            else:
+                try:
+                    cursor.execute(f"""
+                    INSERT INTO `Customer` 
+                        (`name`, `username`, `password`, `email`, `address`)
+                    VALUE
+                        ('{name}', '{username}', '{password}', '{email}', '{address}');
+                    """)
+                except pymysql.err.IntegrityError:
+                    flash("Username/Email is already in use")
+                else:    
+                    return redirect("/signin") 
+                finally:
+                    cursor.close()
+                    conn.close()
+        return render_template("signup.html.jinja")
     
 
 @app.route("/signin", methods=["POST", "GET"])
 def signinpage():
-    if request.method == "POST":
-        username = request.form['username'].strip()
-        password = request.form['password']
+    if flask_login.current_user.is_authenticated:
+        return redirect("/browse")
+    else:
+        if request.method == "POST":
+            username = request.form['username'].strip()
+            password = request.form['password']
 
-        conn = connect_db()
-        cursor = conn.cursor()
+            conn = connect_db()
+            cursor = conn.cursor()
 
-        cursor.execute(f"SELECT * FROM `Customer` WHERE `username` = '{username}';")
-        
-        result = cursor.fetchone()
+            cursor.execute(f"SELECT * FROM `Customer` WHERE `username` = '{username}';")
+            
+            result = cursor.fetchone()
 
-        if result is None: 
-            flash("Your username/password is incorrect")
-        elif password != result["password"]:
-            flash("Your username/password is incorrect")
-        else: 
-            user = User(result["id"], result["username"], result["email"], result["name"])
+            if result is None: 
+                flash("Your username/password is incorrect")
+            elif password != result["password"]:
+                flash("Your username/password is incorrect")
+            else: 
+                user = User(result["id"], result["username"], result["email"], result["name"])
 
-            flask_login.login_user(user)
+                flask_login.login_user(user)
 
-            return redirect('/')
+                return redirect('/')
 
        
     return render_template("signin.html.jinja")
@@ -254,45 +261,77 @@ def add_checkout():
     
     customer_id = flask_login.current_user.id
 
-    cursor.execute(f"""SELECT `name`, `price`, `quantity`, `image`, `product_id`, `Cart`.`id`
-    FROM 'Cart' JOIN `Product` ON `product_id` = `Product`.`id`
-    WHERE `customer_id` = {customer_id};""")
+    cursor.execute(f""" SELECT 
+            `product`, 
+            `price`, 
+            `quantity`, 
+            `image`, 
+            `product_id`, 
+            `Cart`.`id` 
+        FROM `Cart` JOIN `Product` ON `product_id` = `Product`.`id` 
+        WHERE `customer_id` = {customer_id};""")
 
     results = cursor.fetchall()
 
-    total = 0 
-    for products in results:
+    if len(results) > 0:
 
-        quantity = products["quantity"]
-        price = products["price"]
-        item_total = quantity * price
-        total = item_total + total
+        total=0
+        for products in results:
+            quantity = products["quantity"]
+            price = products["price"]
+            item_total = quantity * price
+            total = item_total + total
 
-    cursor.close()      
-    conn.close()
+        cursor.close()      
+        conn.close()
 
-    return render_template("checkout.html.jinja", products=results)
-
-
-
-@app.route("/reviews", methods = ["POST"])
-@flask_login.login_required
-def add_reviews():
+        return render_template("checkout.html.jinja", total=total, products=results)
+    else:
+        return redirect("/cart")
+    
+@app.route("/sales", methods = ["POST"])
+def sales():
     conn = connect_db()
     cursor = conn.cursor()
 
     customer_id = flask_login.current_user.id
 
-    cursor.execute(f"""SELECT `ratings`, `comments`, `product_id`, `customer_id`, `image`, `time_stamp`
-    FROM 'Reviews' JOIN 'Customer' ON `customer_id` = `Customer`.`id`                  
-    WHERE `customer_id` = {customer_id};""")
+    address = request.form["address"]
+    payment = request.form["payment"]
 
-    results = cursor.fetchone()
+    cursor.execute(f"""
+                   INSERT INTO `Sale`
+                      (`address`, `payment`, `customer_id`)
+                   VALUES
+                      ('{address}', '{payment}', '{customer_id}');
+                   """)
+    
+    sale_id = cursor.lastrowid
 
+    cursor.execute(f""" SELECT * FROM `Cart` WHERE `customer_id` = {customer_id};""")
+    
+    results = cursor.fetchall()
+
+    for products in results:
+        product_id = products["product_id"]
+        quantity = products["quantity"]
+        cursor.execute(f""" 
+                        INSERT INTO `SaleProduct`
+                            (`product_id`, `quantity`, `sale_id`)
+                        VALUES
+                            ('{product_id}','{quantity}', '{sale_id}');
+                       """)
+    cursor.execute(f"DELETE FROM `Cart` WHERE `customer_id` = '{customer_id}';")
     cursor.close()
     conn.close()
+    return redirect("/thank_you")
 
-    return render_template("product.html.jinja", products=results)
+
+@app.route("/thank_you")
+@flask_login.login_required
+def thank_you(): 
+    return render_template("thank_you.html.jinja")
+
 
 @app.route("/product/<product_id>/reviews", methods = ["POST"])
 @flask_login.login_required
@@ -308,9 +347,10 @@ def update_reviews(product_id):
 
     cursor.execute(f"""INSERT INTO 
                     `Reviews`(`customer_id`, `product_id`, `comments`, `ratings`) 
-                   VALUES ('{customer_id}','{product_id}','{comments}', `{ratings}`)
+                   VALUES ("{customer_id}","{product_id}","{comments}", "{ratings}")
                    ON DUPLICATE KEY UPDATE 
-                        'comments' = 'comments' + {ratings}
+                   `comments` = "{comments}"
+                   `ratings` = "{ratings}"
                    """)
                     
     
@@ -322,11 +362,48 @@ def update_reviews(product_id):
     return render_template("product.html.jinja", product=results)                 
 
 
+@app.route("/salehistory")
+ 
+def sale_history(sale_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    
+    customer_id = flask_login.login_required
 
+    cursor.execute(f"""
+            SELECT * FROM `Sale` WHERE `customer_id` = "{customer_id}" """)
+    results = cursor.fetchall()
 
+    cursor.close()
+    conn.close()
 
+    return render_template("salehistory.html.jinja", sales=results)
 
+@app.route("/sale_history/<sale_id>")
+@flask_login.login_required
+def pastorders(sale_id):
 
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(f"""
+        SELECT 
+            `product`, 
+            `price`, 
+            `quantity`, 
+            `image`, 
+            `product_id`, 
+            `SaleProduct`.`id` 
+        FROM `SaleProduct` 
+        JOIN `Product` ON `product_id` = `Product`.`id` 
+        WHERE `sale_id` = {sale_id};""")
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("past_user_order.html.jinja", products = results)
 
 
 
